@@ -7,13 +7,15 @@ import { MongooseModule } from "@nestjs/mongoose";
 
 @Module({
 	imports: [
+		
 		ConfigModule.forRoot({
-			isGlobal: true, 
+			isGlobal: true,
 		}),
-		MongooseModule.forRoot(process.env.DB_URI!, {
-			connectionName : "auth"
-		}) ,		
-		AuthModule, BookmarkModule, UserModule,
+		
+		MongooseModule.forRoot(process.env.DB_URI!),
+		AuthModule,
+		BookmarkModule,
+		UserModule,
 	],
 	
 })
