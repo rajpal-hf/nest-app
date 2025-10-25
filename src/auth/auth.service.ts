@@ -1,125 +1,139 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
-import { AuthDto , LoginDto } from './dto';
-import * as argon from 'argon2'	
-import { User } from './schema/auth.schema';
+import { HttpStatus, Injectable, OnApplicationBootstrap } from '@nestjs/common';
+import { AuthDto, LoginDto } from './dto';
+import * as argon from 'argon2';
+import { User, UserDocument } from './schema/auth.schema';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { JwtService } from '@nestjs/jwt';
+import * as bcrypt from 'bcrypt';
+
+@Injectable()
+export class UsersService implements OnApplicationBootstrap {
+	constructor(
+		@InjectModel(User.name) private userModel: Model<UserDocument>,
+	) { }
+
+	async onApplicationBootstrap() {
+		const admin = await this.userModel.findOne({ email: 'admin@example.com' });
+
+		if (!admin) {
+			const hashedPassword = await bcrypt.hash('admin123', 10);
+			await this.userModel.create({
+				name: 'Admin ',
+				email: 'admin@example.com',
+				password: hashedPassword,
+				role: 'admin',
+			});
+			console.log('✅ Default admin created: admin@example.com / admin123');
+		}
+	}
+}
 
 @Injectable()
 export class AuthService {
-	
-	constructor(@InjectModel(User.name) private userModel: Model<User>,
-		private jwt : JwtService	
+	constructor(
+		@InjectModel(User.name) private userModel: Model<User>,
+		private jwt: JwtService,
 	) { }
 
+	async signup(dto: AuthDto) {
+		try {
+			if (!dto.email || !dto.name || !dto.password) {
+				return {
+					status: HttpStatus.BAD_REQUEST,
+					msg: 'All fields are required',
+				};
+			}
+
+			const existingUser = await this.userModel.findOne({ email: dto.email });
+			if (existingUser) {
+				return {
+					status: HttpStatus.BAD_REQUEST,
+					msg: 'User already exists',
+				};
+			}
+
+			const hashPass = await argon.hash(dto.password);
+
+			const user = new this.userModel({
+				email: dto.email,
+				name: dto.name,
+				password: hashPass,
+			});
+
+			await user.save();
+
+			return {
+				status: HttpStatus.CREATED,
+				msg: 'User created successfully',
+				user,
+			};
+		} catch (error) {
+			console.error('❌ Error in signup service:', error);
+			return {
+				status: HttpStatus.INTERNAL_SERVER_ERROR,
+				msg: 'Error in signup service',
+			};
+		}
+	}
+
 	async login(dto: LoginDto) {
-		
 		try {
 			if (!dto.email || !dto.password) {
 				return {
-					HttpStatus: HttpStatus.BAD_REQUEST,
-					msg: "All fields are required"
-				}
+					status: HttpStatus.BAD_REQUEST,
+					msg: 'All fields are required',
+				};
 			}
-			const existingUser = await this.userModel.findOne({ email: dto.email })
-			if (! existingUser) {
+
+			const existingUser = await this.userModel.findOne({ email: dto.email });
+			if (!existingUser) {
 				return {
-					HttpStatus: HttpStatus.BAD_REQUEST,
-					msg: "User with this email not exist exists"
-				}
+					status: HttpStatus.BAD_REQUEST,
+					msg: 'User with this email does not exist',
+				};
 			}
-			// check password
 
-			const passMatch = await argon.verify(existingUser.password.toString(), dto.password)
-			
-			console.log("passMatch ", passMatch)
+			const passMatch = await argon.verify(
+				existingUser.password.toString(),
+				dto.password,
+			);
 
-			if(! passMatch) {
+			if (!passMatch) {
 				return {
-					HttpStatus: HttpStatus.BAD_REQUEST,
-					msg: "Incorrect password"
-				}
+					status: HttpStatus.BAD_REQUEST,
+					msg: 'Incorrect password',
+				};
 			}
 
-			const token = await this.signToken(existingUser._id,existingUser.email.toString())
+			const token = await this.signToken(
+				existingUser._id,
+				existingUser.email.toString(),
+			);
 
 			return {
-				HttpStatus: HttpStatus.OK,
-				msg: "Login successful",
+				status: HttpStatus.OK,
+				msg: 'Login successful',
 				user: existingUser,
-				token
-			}
+				token,
+			};
 		} catch (error) {
-
-			console.log("Error in signup service", error)
+			console.error('❌ Error in login service:', error);
 			return {
-				HttpStatus: HttpStatus.INTERNAL_SERVER_ERROR,
-				msg: "Error in signup service"
-			}
-		}
-
-	}
-
-
-
-
-	async signup(dto: AuthDto) {
-		
-		try {
-			if(!dto.email || !dto.name || !dto.password) {
-				return {
-					HttpStatus : HttpStatus.BAD_REQUEST,
-					msg: "All fields are required"
-				}
-			}
-			const existingUser = await this.userModel.findOne({ email: dto.email })
-			if (existingUser) {
-				return {
-					HttpStatus : HttpStatus.BAD_REQUEST,
-					msg: "User already exists"
-				}
-			}
-			const hashPass = await argon.hash(dto.password)
-		console.log("hashed password", hashPass)
-
-		const user = new this.userModel ({ 
-			email: dto.email,
-			name: dto.name,
-			password : hashPass
-		})
-
-			console.log("https ", HttpStatus)
-
-		await user.save()
-			return {
-			HttpStatus : HttpStatus.CREATED,
-			user,
-			msg: "User Created done "
-		}
-		} catch (error) {
-			
-			console.log("Error in signup service", error)
-			return {
-				HttpStatus : HttpStatus.INTERNAL_SERVER_ERROR,
-				msg : "Error in signup service"
-			}
+				status: HttpStatus.INTERNAL_SERVER_ERROR,
+				msg: 'Error in login service',
+			};
 		}
 	}
-
 
 	async signToken(userId: any, email: string) {
-		const payload = {
-			id: userId,
-			email,
-		}
+		const payload = { id: userId, email };
+
 		const token = await this.jwt.signAsync(payload, {
 			expiresIn: '15m',
 			secret: process.env.JWT_SECRET,
-		})
+		});
 
-		return {
-			access_token: token,
-		}
+		return { access_token: token };
 	}
 }
