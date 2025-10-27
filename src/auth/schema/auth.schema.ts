@@ -5,7 +5,16 @@ export enum UserRole {
 	ADMIN = 'admin',
 	CUSTOMER = 'customer',
 }
-@Schema()
+ export enum UserStatus { 
+	ACTIVE = 'active',
+	INACTIVE = 'inactive',
+ }
+export enum UserGender {
+	MALE = 'male',
+	FEMALE = 'female',
+	OTHER = 'other',
+}
+@Schema({timestamps: true})
 export class User {
 	@Prop({ required: true, trim: true})
 	name: String
@@ -16,6 +25,15 @@ export class User {
 	@Prop()
 	password: String
 	
+	@Prop({enum: UserGender})
+	gender: UserGender
+
+	@Prop({enum: UserStatus , default : UserStatus.ACTIVE})
+	status: UserStatus
+
+	@Prop()
+	phone: String
+
 	@Prop({
 		type: String,
 		enum: UserRole,

@@ -10,7 +10,7 @@ export class JwtStrategy extends PassportStrategy(Strategy , 'jwt') {
 		if (!secret) {
 			throw new Error('JWT_SECRET is not defined!');
 		}
-
+		
 		super({
 			jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
 			secretOrKey: secret,
@@ -19,5 +19,7 @@ export class JwtStrategy extends PassportStrategy(Strategy , 'jwt') {
 
 	async validate(payload: any) {
 		return { userId: payload.id, email: payload.email };
-	}
+	} 
+
+	
 }
