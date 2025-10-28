@@ -1,11 +1,13 @@
 import { Module } from "@nestjs/common";
 import { AuthController } from './auth.controller';
-import { AuthService } from './auth.service'; // 
+import { AuthService } from './auth.service';
 import { MongooseModule } from "@nestjs/mongoose";
 import { User, userSchema } from "./schema/auth.schema";
 import { JwtModule } from "@nestjs/jwt";
 import { ConfigModule } from "@nestjs/config";
 import { JwtStrategy } from "./strategy";
+import { AuthGuard } from "./guard/auth.guard"; // 👈 Make sure this is your custom AuthGuard
+import { RolesGuard } from "src/roleGuard/roles.guard";
 
 @Module({
 	imports: [
@@ -13,9 +15,23 @@ import { JwtStrategy } from "./strategy";
 			isGlobal: true,
 		}),
 		MongooseModule.forFeature([{ name: User.name, schema: userSchema }]),
-		JwtModule.register({})
+		JwtModule.register({
+			secret: process.env.JWT_SECRET || 'supersecretkey',
+			signOptions: { expiresIn: '1d' },
+		}),
 	],
 	controllers: [AuthController],
-	providers: [AuthService, JwtStrategy]
+	providers: [
+		AuthService,
+		JwtStrategy,
+		AuthGuard,   // 👈 Added here
+		RolesGuard,  // 👈 Added here
+	],
+	exports: [
+		JwtModule,
+		AuthGuard,   // 👈 Now valid
+		RolesGuard,  // 👈 Now valid
+	],
 })
 export class AuthModule { }
+	
