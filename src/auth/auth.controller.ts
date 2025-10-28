@@ -1,6 +1,6 @@
-import { Body, Controller, Get, Param, Post,Query,UseGuards	 } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseIntPipe, Post,Query,UseGuards	 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { AuthDto, LoginDto } from './dto'
+import { AuthDto, GetUserByIdDto, LoginDto, PaginationDto, UserFilterDto } from './dto'
 import { AuthGuard } from './guard/auth.guard';
 import { Roles } from 'src/roleGuard/roles.decorator';
 import { RolesGuard } from 'src/roleGuard/roles.guard';
@@ -26,18 +26,27 @@ export class AuthController {
 	@Roles(UserRole.ADMIN)
 	@Get('all-users')
 	getAllUsers(
-		@Query('page') page?: string,
-		@Query('limit') limit?: string,
+		@Query() dto: PaginationDto,
 	) {
-		console.log("Fetching all users with pagination...");
 		return this.authService.getAllUsers(
-			page ? parseInt(page, 10) : 1,	
-			limit ? parseInt(limit, 10) : 5,
+			dto.page ? dto.page : 1,
+			dto.limit ? dto.limit : 5,
 		);
 	}
 
+
 	@Get('get-user-by-id/:id')
-	getUserById(@Param('id') id: string) {
-		return this.authService.getUserById(id);
+	getUserById(@Param() dto: GetUserByIdDto) {
+		return this.authService.getUserById(dto);
 	}
+
+	@Get('filter-users')
+	filterUsers(@Query() dto: UserFilterDto) {
+		return this.authService.filterUsers(dto);
+	}
+
+
+
+	
+
 	}

@@ -14,10 +14,21 @@ try {
 	))
 
 	const config = new DocumentBuilder()
-		.setTitle('Cats example')
-		.setDescription('The cats API description')
+		.setTitle('cat example')
+		.setDescription('The Jadu API description')
 		.setVersion('1.0')
-		.addTag('cats')
+		.addTag('Jadu')	
+		.addBearerAuth(
+        {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+          name: 'Authorization',
+          description: 'Enter JWT token here (without Bearer prefix)',
+          in: 'header',
+        },
+        'access-token',
+      )
 		.build();
 	const documentFactory = () => SwaggerModule.createDocument(app, config);
 	SwaggerModule.setup('api', app, documentFactory);

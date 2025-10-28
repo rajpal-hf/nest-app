@@ -56,11 +56,10 @@ export class GetUserByIdDto {
 	@ApiProperty({
 		description: 'The ID of the user', example: '68ff5d80d3c0cd44b746bb99' })
 	@IsString()
-	@IsNotEmpty()
 	id: string;
 }
 
-export class GetAllUsersDto {
+export class PaginationDto {
 	@ApiProperty({ description: 'Page number for pagination', example: 1 })	
 	@IsOptional()
 	page?: number;
@@ -68,4 +67,23 @@ export class GetAllUsersDto {
 	@ApiProperty({ description: 'Number of users per page for pagination', example: 10 })
 	@IsOptional()
 	limit?: number;
+}
+
+export class UserFilterDto {
+	@ApiProperty({ description: 'Filter by name', example: 'John' })
+	@IsOptional()
+	saerch?: string;
+
+	// @ApiProperty({ description: 'Filter by email', example: 'john@example.com' })
+	// @IsOptional()
+	// email?: string;
+
+	// @ApiProperty({ description: 'Filter by phone number', example: '1234567890' })
+	// @IsOptional()
+	// phone?: string;
+
+	@ApiProperty({ description: 'Filter by phone number', example: '1234567890' })
+	@IsOptional()
+	status?: string;
+
 }

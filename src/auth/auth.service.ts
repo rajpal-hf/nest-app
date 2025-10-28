@@ -1,5 +1,5 @@
 import { HttpStatus, Injectable, OnApplicationBootstrap } from '@nestjs/common';
-import { AuthDto, LoginDto } from './dto';
+import { AuthDto, GetUserByIdDto, LoginDto, UserFilterDto } from './dto';
 import * as argon from 'argon2';
 import { User, UserDocument } from './schema/auth.schema';
 import { Model } from 'mongoose';
@@ -26,7 +26,7 @@ export class AuthService implements OnApplicationBootstrap {
 				password: hashedPassword,
 				role: 'admin',
 			});
-			console.log('✅ Default admin created: admin@gmail.com / admin123');
+			console.log('Default admin created: admin@gmail.com / admin123');
 		}
 	}
 
@@ -34,7 +34,7 @@ export class AuthService implements OnApplicationBootstrap {
 	async signup(dto: AuthDto) {
 		console.log('🚀 Signup DTO:', dto);
 		try {
-			if (!dto.email || !dto.name || !dto.password) {
+			if (!dto.email || !dto.name || !dto.password || !dto.phone) {
 				throw new Error('All fields are required');
 			}
 
@@ -49,6 +49,8 @@ export class AuthService implements OnApplicationBootstrap {
 				email: dto.email,
 				name: dto.name,
 				password: hashPass,
+				phone:dto.phone
+
 			});
 
 			await user.save();
@@ -59,7 +61,7 @@ export class AuthService implements OnApplicationBootstrap {
 				user,
 			};
 		} catch (error) {
-			console.error('❌ Error in signup service:', error);
+			console.error('Error in signup service:', error);
 			return {
 				status: HttpStatus.INTERNAL_SERVER_ERROR,
 				msg: 'Error in signup service',
@@ -102,7 +104,7 @@ export class AuthService implements OnApplicationBootstrap {
 				token,
 			};
 		} catch (error) {
-			console.error('❌ Error in login service:', error);
+			console.error('Error in login service:', error);
 			return {
 				status: HttpStatus.INTERNAL_SERVER_ERROR,
 				msg: 'Error in login service',
@@ -114,7 +116,7 @@ export class AuthService implements OnApplicationBootstrap {
 	async signToken(userId: any, email: string, role: string, name: string) {
 		const payload = { id: userId, email, role, name };
 		const token = await this.jwt.signAsync(payload, {
-			expiresIn: '15m',
+			expiresIn: '1d',
 			secret: process.env.JWT_SECRET,
 		});
 		return { access_token: token };
@@ -122,9 +124,10 @@ export class AuthService implements OnApplicationBootstrap {
 
 
 	// ``````````````````````````````````````````````````` Get All Users ````````````````````````````````````````````````````````
-	async getAllUsers(page: number = 1, limit: number = 3) {
+	async getAllUsers(page: number, limit: number) {
 		try {
 	
+			
 			const filter = { role: { $ne: 'admin' } };
 
 			const skip = (page - 1) * limit;
@@ -132,12 +135,11 @@ export class AuthService implements OnApplicationBootstrap {
 
 			const totalUsers = await this.userModel.countDocuments(filter);
 
-			// Fetch paginated users
 			const users = await this.userModel
 				.find(filter)
 				.skip(skip)
 				.limit(limit)
-				.sort({ createdAt: -1 }); // Optional: sort by newest
+				.sort({ createdAt: -1 }); 
 
 			if (!users.length) {
 				return {
@@ -166,8 +168,9 @@ export class AuthService implements OnApplicationBootstrap {
 
 
 // ``````````````````````````````````````````````````` Get User by id `````````````````````````````````````````````````````````````
-	async getUserById(id: string) {
-		const user = await this.userModel.findById(id);
+
+	async getUserById(dto: GetUserByIdDto) {
+		const user = await this.userModel.findById(dto.id);
 		if (!user) {
 			return {
 				status: HttpStatus.NOT_FOUND,
@@ -179,5 +182,56 @@ export class AuthService implements OnApplicationBootstrap {
 			msg: 'User retrieved successfully',
 			user,
 		};
-	}																			
+	}
+
+
+async filterUsers(dto: UserFilterDto) {
+  try {
+    const { email, phone, name,status } = dto;
+
+    const filter: Record<string, any> = {};
+
+    if (name) filter.name = { $regex: name, $options: 'i' };
+    if (email) filter.email = { $regex: email, $options: 'i' };
+    if (phone) filter.phone = { $regex: phone, $options: 'i' };
+    if (status) filter.status = { $regex: status, $options: 'i' };
+
+    if (Object.keys(filter).length === 0) {
+      return {
+        status: HttpStatus.BAD_REQUEST,
+        msg: 'Please provide at least one filter field (name, email, or phone)',
+      };
+    }
+
+    const users = await this.userModel.find(filter).exec();
+
+    if (!users.length) {
+      return {
+        status: HttpStatus.NOT_FOUND,
+        msg: 'No users found matching your criteria',
+      };
+    }
+
+
+
+	// pending pagination here 
+
+
+    return {
+      status: HttpStatus.OK,
+      msg: 'Users retrieved successfully',
+      count: users.length,
+      users,
+    };
+  } catch (error) {
+    console.error('Error in filterUser service:', error);
+    return {
+      status: HttpStatus.INTERNAL_SERVER_ERROR,
+      msg: 'Error in filterUser service',
+    };
+  }
 }
+
+
+}
+
