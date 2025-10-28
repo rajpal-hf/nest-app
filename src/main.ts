@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { ApiBearerAuth, DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
 try {
@@ -14,21 +14,12 @@ try {
 	))
 
 	const config = new DocumentBuilder()
-		.setTitle('cat example')
-		.setDescription('The Jadu API description')
+		.setTitle('nest auth example')
+		.setDescription('The auth API description')
 		.setVersion('1.0')
-		.addTag('Jadu')	
-		.addBearerAuth(
-        {
-          type: 'http',
-          scheme: 'bearer',
-          bearerFormat: 'JWT',
-          name: 'Authorization',
-          description: 'Enter JWT token here (without Bearer prefix)',
-          in: 'header',
-        },
-        'access-token',
-      )
+		.addTag('Auth')	
+		.addBearerAuth()
+		
 		.build();
 	const documentFactory = () => SwaggerModule.createDocument(app, config);
 	SwaggerModule.setup('api', app, documentFactory);

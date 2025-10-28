@@ -72,18 +72,7 @@ export class PaginationDto {
 export class UserFilterDto {
 	@ApiProperty({ description: 'Filter by name', example: 'John' })
 	@IsOptional()
-	saerch?: string;
+	search?: string;
 
-	// @ApiProperty({ description: 'Filter by email', example: 'john@example.com' })
-	// @IsOptional()
-	// email?: string;
-
-	// @ApiProperty({ description: 'Filter by phone number', example: '1234567890' })
-	// @IsOptional()
-	// phone?: string;
-
-	@ApiProperty({ description: 'Filter by phone number', example: '1234567890' })
-	@IsOptional()
-	status?: string;
 
 }

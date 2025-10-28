@@ -124,47 +124,147 @@ export class AuthService implements OnApplicationBootstrap {
 
 
 	// ``````````````````````````````````````````````````` Get All Users ````````````````````````````````````````````````````````
-	async getAllUsers(page: number, limit: number) {
-		try {
+// 	async getAllUsers(page: number, limit: number) {
+// 		try {
 	
 			
-			const filter = { role: { $ne: 'admin' } };
+// 			const filter = { role: { $ne: 'admin' } };
 
-			const skip = (page - 1) * limit;
+// 			const skip = (page - 1) * limit;
 
 
-			const totalUsers = await this.userModel.countDocuments(filter);
+// 			const totalUsers = await this.userModel.countDocuments(filter);
 
-			const users = await this.userModel
-				.find(filter)
-				.skip(skip)
-				.limit(limit)
-				.sort({ createdAt: -1 }); 
+// 			const users = await this.userModel
+// 				.find(filter)
+// 				.skip(skip)
+// 				.limit(limit)
+// 				.sort({ createdAt: -1 }); 
 
-			if (!users.length) {
-				return {
-					status: HttpStatus.NOT_FOUND,
-					msg: 'No users found',
-				};
-			}
+// 			if (!users.length) {
+// 				return {
+// 					status: HttpStatus.NOT_FOUND,
+// 					msg: 'No users found',
+// 				};
+// 			}
 
-			return {
-				status: HttpStatus.OK,
-				msg: 'Users retrieved successfully',
-				page,
-				limit,
-				totalUsers,
-				totalPages: Math.ceil(totalUsers / limit),
-				users,
-			};
-		} catch (error) {
-			console.error('Error fetching paginated users:', error);
-			return {
-				status: HttpStatus.INTERNAL_SERVER_ERROR,
-				msg: 'Error fetching users',
-			};
-		}
-	}
+// 			return {
+// 				status: HttpStatus.OK,
+// 				msg: 'Users retrieved successfully',
+// 				page,
+// 				limit,
+// 				totalUsers,
+// 				totalPages: Math.ceil(totalUsers / limit),
+// 				users,
+// 			};
+// 		} catch (error) {
+// 			console.error('Error fetching paginated users:', error);
+// 			return {
+// 				status: HttpStatus.INTERNAL_SERVER_ERROR,
+// 				msg: 'Error fetching users',
+// 			};
+// 		}
+// 	}
+
+
+
+
+
+// async filterUsers(dto: UserFilterDto) {
+//   try {
+//     const { email, phone, name,status } = dto;
+
+//     const filter: Record<string, any> = {};
+
+//     if (name) filter.name = { $regex: name, $options: 'i' };
+//     if (email) filter.email = { $regex: email, $options: 'i' };
+//     if (phone) filter.phone = { $regex: phone, $options: 'i' };
+//     if (status) filter.status = { $regex: status, $options: 'i' };
+
+//     if (Object.keys(filter).length === 0) {
+//       return {
+//         status: HttpStatus.BAD_REQUEST,
+//         msg: 'Please provide at least one filter field (name, email, or phone)',
+//       };
+//     }
+
+//     const users = await this.userModel.find(filter).exec();
+
+//     if (!users.length) {
+//       return {
+//         status: HttpStatus.NOT_FOUND,
+//         msg: 'No users found matching your criteria',
+//       };
+//     }
+
+//     return {
+//       status: HttpStatus.OK,
+//       msg: 'Users retrieved successfully',
+//       count: users.length,
+//       users,
+//     };
+//   } catch (error) {
+//     console.error('Error in filterUser service:', error);
+//     return {
+//       status: HttpStatus.INTERNAL_SERVER_ERROR,
+//       msg: 'Error in filterUser service',
+//     };
+//   }
+// }
+
+
+async getAllUsers(dto: UserFilterDto, page: number, limit: number) {
+  try {
+    const { search } = dto;
+		
+    const filter: Record<string, any> = { role: { $ne: 'admin' } };
+
+
+    if (search) {
+      filter.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
+        { phone: { $regex: search, $options: 'i' } },
+      ];
+    }
+
+    const skip = (page - 1) * limit;
+
+    const totalUsers = await this.userModel.countDocuments(filter);
+
+    
+    const users = await this.userModel
+      .find(filter)
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 });
+
+    if (!users.length) {
+      return {
+        status: HttpStatus.NOT_FOUND,
+        msg: search
+          ? 'No users found matching your search criteria'
+          : 'No users found',
+      };
+    }
+
+    return {
+      status: HttpStatus.OK,
+      msg: 'Users retrieved successfully',
+      page,
+      limit,
+      totalUsers,
+      totalPages: Math.ceil(totalUsers / limit),
+      users,
+    };
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    return {
+      status: HttpStatus.INTERNAL_SERVER_ERROR,
+      msg: 'Error fetching users',
+    };
+  }
+}
 
 
 // ``````````````````````````````````````````````````` Get User by id `````````````````````````````````````````````````````````````
@@ -183,54 +283,7 @@ export class AuthService implements OnApplicationBootstrap {
 			user,
 		};
 	}
-
-
-async filterUsers(dto: UserFilterDto) {
-  try {
-    const { email, phone, name,status } = dto;
-
-    const filter: Record<string, any> = {};
-
-    if (name) filter.name = { $regex: name, $options: 'i' };
-    if (email) filter.email = { $regex: email, $options: 'i' };
-    if (phone) filter.phone = { $regex: phone, $options: 'i' };
-    if (status) filter.status = { $regex: status, $options: 'i' };
-
-    if (Object.keys(filter).length === 0) {
-      return {
-        status: HttpStatus.BAD_REQUEST,
-        msg: 'Please provide at least one filter field (name, email, or phone)',
-      };
-    }
-
-    const users = await this.userModel.find(filter).exec();
-
-    if (!users.length) {
-      return {
-        status: HttpStatus.NOT_FOUND,
-        msg: 'No users found matching your criteria',
-      };
-    }
-
-
-
-	// pending pagination here 
-
-
-    return {
-      status: HttpStatus.OK,
-      msg: 'Users retrieved successfully',
-      count: users.length,
-      users,
-    };
-  } catch (error) {
-    console.error('Error in filterUser service:', error);
-    return {
-      status: HttpStatus.INTERNAL_SERVER_ERROR,
-      msg: 'Error in filterUser service',
-    };
-  }
-}
+	
 
 
 }

@@ -1,0 +1,4 @@
+name,description,price,inStock,currency
+iPhone 16,Latest iPhone,1200,true,USD
+Galaxy S25,New Samsung Phone,999,true,USD
+AirPods,Wireless Earbuds,199,false,USD
