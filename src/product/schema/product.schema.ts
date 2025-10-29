@@ -12,6 +12,9 @@ export class Product {
 	@Prop({ required: true })
 	price: number;
 
+	@Prop()
+	stockQuantity: number;
+
 	@Prop({ default: true })
 	inStock: boolean;																																			
 

@@ -1,8 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { HttpException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Product, ProductDocument } from './schema/product.schema';
-import { AddProductDto, UpdateProductDto } from './dto/product.dto';
+import { AddProductDto, ProductFilterDto, UpdateProductDto } from './dto/product.dto';
 
 @Injectable()
 export class ProductService {
@@ -16,18 +16,28 @@ export class ProductService {
 		return newProduct.save();
 	}
 
+	async filterProduct(filterData: ProductFilterDto) {
+		try {
+			const result: any = {};
 
-	async findAll(): Promise<Product[]> {
-		return this.productModel.find().exec();
-	}
-
-	async findById(id: string): Promise<Product> {
-		const product = await this.productModel.findById(id).exec();
-		if (!product) {
-			throw new NotFoundException('Product not found');
+		if (filterData.search) {
+			result.$or = [
+				{id : {$regex: filterData.search, $options: 'i' }},
+				{ name: { $regex: filterData.search, $options: 'i' } },
+				{ description: { $regex: filterData.search, $options: 'i' } },
+			];
 		}
-		return product;
-	}
+
+		const products = await this.productModel.find(result).exec();
+		return products;
+	
+		} catch (error) {
+			console.error('Error filtering products:', error);
+			throw error instanceof HttpException ? error : new HttpException('Internal server error in filtering the data', 500);
+		}
+		
+	 }
+
 
 	async updateProduct(id: string, updateData: UpdateProductDto): Promise<Product> {
 		const updatedProduct = await this.productModel
@@ -47,4 +57,13 @@ export class ProductService {
 		}
 		return { message: 'Product deleted successfully' };
 	}
+
+
+	async bulkCreate(products: any[]) {
+		if (!products || products.length === 0) {
+			throw new Error('No products to insert');
+		}
+		return this.productModel.insertMany(products);
+	}
+
 }

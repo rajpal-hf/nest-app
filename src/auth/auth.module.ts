@@ -24,13 +24,13 @@ import { RolesGuard } from "src/roleGuard/roles.guard";
 	providers: [
 		AuthService,
 		JwtStrategy,
-		AuthGuard,   // 👈 Added here
-		RolesGuard,  // 👈 Added here
+		AuthGuard,   
+		RolesGuard,  
 	],
 	exports: [
 		JwtModule,
-		AuthGuard,   // 👈 Now valid
-		RolesGuard,  // 👈 Now valid
+		AuthGuard,   
+		RolesGuard,  
 	],
 })
 export class AuthModule { }

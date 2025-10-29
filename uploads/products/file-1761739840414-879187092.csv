@@ -1,0 +1,21 @@
+name,description,price,stockQuantity,inStock,currency,image
+Wireless Headphones,Bluetooth over-ear headphones with noise cancellation.,129.99,150,True,USD,https://example.com/images/headphones.jpg
+Smartwatch Pro,Fitness tracker with heart rate and sleep monitoring.,199.99,80,True,USD,https://example.com/images/smartwatch.jpg
+Gaming Laptop,High-performance laptop with RTX graphics for gaming.,1499.99,30,True,USD,https://example.com/images/laptop.jpg
+Mechanical Keyboard,RGB backlit keyboard with blue switches.,89.99,200,True,USD,https://example.com/images/keyboard.jpg
+Wireless Mouse,Ergonomic wireless mouse with adjustable DPI.,39.99,300,True,USD,https://example.com/images/mouse.jpg
+4K Monitor,27-inch 4K UHD display with HDR support.,349.99,75,True,USD,https://example.com/images/monitor.jpg
+USB-C Hub,"7-in-1 USB-C hub with HDMI, USB 3.0, and SD card slots.",49.99,250,True,USD,https://example.com/images/hub.jpg
+Portable SSD 1TB,High-speed portable SSD with USB 3.2 support.,129.99,180,True,USD,https://example.com/images/ssd.jpg
+Bluetooth Speaker,Waterproof Bluetooth speaker with deep bass.,79.99,250,True,USD,https://example.com/images/speaker.jpg
+Smartphone G12,Latest smartphone with AMOLED display and 5G connectivity.,899.99,60,True,USD,https://example.com/images/phone.jpg
+Noise Cancelling Earbuds,Wireless earbuds with ANC and wireless charging case.,99.99,180,True,USD,https://example.com/images/earbuds.jpg
+Fitness Tracker Band,Lightweight fitness band with step counter and sleep monitor.,59.99,220,True,USD,https://example.com/images/fitnessband.jpg
+Drone 4K Pro,Camera drone with 4K recording and GPS tracking.,499.99,45,True,USD,https://example.com/images/drone.jpg
+Smart Home Hub,Centralized smart home hub compatible with Alexa and Google Home.,129.99,100,True,USD,https://example.com/images/hub2.jpg
+Wireless Charger Pad,Fast wireless charging pad for iOS and Android devices.,39.99,260,True,USD,https://example.com/images/charger.jpg
+Action Camera,Waterproof action camera with 4K support and accessories.,159.99,90,True,USD,https://example.com/images/actioncamera.jpg
+VR Headset,Immersive virtual reality headset with 3D spatial sound.,299.99,40,True,USD,https://example.com/images/vr.jpg
+External Hard Drive 2TB,USB 3.0 external hard drive for data backup.,89.99,200,True,USD,https://example.com/images/hdd.jpg
+Laptop Cooling Pad,Adjustable laptop cooling stand with dual fans.,34.99,240,True,USD,https://example.com/images/cooler.jpg
+Smart LED Bulb,Wi-Fi-enabled RGB smart bulb with app control.,19.99,400,True,USD,https://example.com/images/bulb.jpg

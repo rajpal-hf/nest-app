@@ -5,9 +5,9 @@
 
 import { IsEmail, IsNotEmpty, IsOptional, IsString, MinLength } from "class-validator";
 import { UserGender, UserStatus } from "../schema/auth.schema";
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty, ApiSchema } from "@nestjs/swagger";
 
-
+@ApiSchema({name : "Auth Dto"})
 export class AuthDto {
 	@ApiProperty({ description: 'The name of the user', example: 'John bro' })
 	@IsString()

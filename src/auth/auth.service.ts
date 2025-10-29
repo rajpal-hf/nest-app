@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable, OnApplicationBootstrap } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, OnApplicationBootstrap } from '@nestjs/common';
 import { AuthDto, GetUserByIdDto, LoginDto, UserFilterDto } from './dto';
 import * as argon from 'argon2';
 import { User, UserDocument } from './schema/auth.schema';
@@ -35,22 +35,20 @@ export class AuthService implements OnApplicationBootstrap {
 		console.log('🚀 Signup DTO:', dto);
 		try {
 			if (!dto.email || !dto.name || !dto.password || !dto.phone) {
-				throw new Error('All fields are required');
+				throw new HttpException('All fields are required', HttpStatus.BAD_REQUEST);
 			}
 
 			const existingUser = await this.userModel.findOne({ email: dto.email });
 			if (existingUser) {
-				throw new Error('User with this email already exists');
+				throw new HttpException('User with this email already exists', HttpStatus.CONFLICT);
 			}
 
 			const hashPass = await argon.hash(dto.password);
-
 			const user = new this.userModel({
 				email: dto.email,
 				name: dto.name,
 				password: hashPass,
-				phone:dto.phone
-
+				phone: dto.phone,
 			});
 
 			await user.save();
@@ -62,13 +60,12 @@ export class AuthService implements OnApplicationBootstrap {
 			};
 		} catch (error) {
 			console.error('Error in signup service:', error);
-			return {
-				status: HttpStatus.INTERNAL_SERVER_ERROR,
-				msg: 'Error in signup service',
-			};
+			// rethrow so it goes to the global filter
+			throw error instanceof HttpException
+				? error
+				: new HttpException(error.message || 'Internal server error', HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
-
 	// ``````````````````````````````````````````````````` Login ```````````````````````````````````````````````````````
 	async login(dto: LoginDto) {
 		try {
@@ -78,7 +75,7 @@ export class AuthService implements OnApplicationBootstrap {
 
 			const existingUser = await this.userModel.findOne({ email: dto.email });
 			if (!existingUser) {
-				throw new Error('User not found');
+				throw new HttpException('User not found',HttpStatus.NOT_FOUND);
 			}
 
 			const passMatch = await argon.verify(
@@ -87,7 +84,7 @@ export class AuthService implements OnApplicationBootstrap {
 			);
 
 			if (!passMatch) {
-				throw new Error('Invalid credentials');
+				throw new HttpException('Invalid credentials',HttpStatus.BAD_REQUEST);
 			}
 
 			const token = await this.signToken(
@@ -105,10 +102,7 @@ export class AuthService implements OnApplicationBootstrap {
 			};
 		} catch (error) {
 			console.error('Error in login service:', error);
-			return {
-				status: HttpStatus.INTERNAL_SERVER_ERROR,
-				msg: 'Error in login service',
-			};
+				throw error instanceof HttpException ? error : new HttpException("Internal Server Error in Login api",HttpStatus.INTERNAL_SERVER_ERROR)
 		}
 	}
 
