@@ -8,7 +8,15 @@ async function bootstrap() {
 try {
 	const PORT = process.env.PORT ?? 5000
 	const app = await NestFactory.create(AppModule);
-	app.enableCors();
+	app.enableCors({
+		origin: [
+			'*',
+			'http://localhost:3000', 
+			'https://eisegetical-brenda-buzzingly.ngrok-free.dev', 
+		],
+		methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+		allowedHeaders: ['Content-Type', 'Authorization'],
+	});
 	app.useGlobalPipes(new ValidationPipe(
 		{
 			whitelist : true

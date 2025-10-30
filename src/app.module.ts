@@ -5,6 +5,10 @@ import { MongooseModule } from "@nestjs/mongoose";
 import { ProductModule } from './product/product.module';
 import { OrderModule } from './order/order.module';
 import { CartModule } from './cart/cart.module';
+import { CouponModule } from './coupon/coupon.module';
+import { SlotModule } from './slot/slot.module';
+import { BookingSlotModule } from './booking-slot/booking-slot.module';
+
 
 @Module({
 	imports: [
@@ -16,7 +20,11 @@ import { CartModule } from './cart/cart.module';
 		AuthModule,
 		ProductModule,
 		OrderModule,
-		CartModule
+		CartModule,
+		CouponModule,
+		SlotModule,
+		BookingSlotModule,
+
 	],
 	
 })
