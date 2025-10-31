@@ -18,12 +18,18 @@ export class CartService {
 	) { }
 
 	async getCart(userId: string) {
-		const cart = await this.cartModel
+		try {
+				const cart = await this.cartModel
 			.findOne({ user: userId })
 			.populate('items.product')
 			.lean();
 		if (!cart) throw new NotFoundException('Cart not found');
 		return cart;
+		} catch (error) {
+			console.error('Error in getCart:', error);
+			throw error instanceof HttpException ? error : new HttpException('Internal Server Error', 500);
+		}
+	
 	}
 
 	async addToCart(userId: string, productId: string, quantity: number) {
@@ -61,7 +67,9 @@ export class CartService {
 	}
 
 	async removeFromCart(userId: string, productId: string) {
-		const cart = await this.cartModel.findOne({ user: userId });
+
+		try {
+			const cart = await this.cartModel.findOne({ user: userId });
 		if (!cart) throw new NotFoundException('Cart not found');
 
 		cart.items = cart.items.filter(
@@ -69,6 +77,11 @@ export class CartService {
 		);
 		await cart.save();
 		return cart;
+		} catch (error) {
+			console.error('Error in removeFromCart:', error);
+			throw error instanceof HttpException ? error : new HttpException('Internal Server Error', 500);
+		}
+		
 	}
 
 	async checkout(userId: string, address: CheckoutDto["address"], paymentMethod = 'COD') {

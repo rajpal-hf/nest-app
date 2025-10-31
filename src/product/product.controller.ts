@@ -102,6 +102,8 @@ export class ProductController {
 	}
 
 	@Get('all-products')
+	@UseGuards(AuthGuard)
+		@ApiBearerAuth()
 	@ApiOperation({ summary: 'Get a product by ID' })
 	@ApiResponse({ status: 200, description: 'Product details' })
 	@ApiResponse({ status: 404, description: 'Product not found' })

@@ -7,12 +7,20 @@ import {
 	Delete,
 	Patch,
 	Req,
+	UseGuards,
 } from '@nestjs/common';
 import { CouponService } from './coupon.service';
 import { CreateCouponDto, UpdateCouponDto, ApplyCouponDto } from './dto/coupon.dto';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { AuthGuard } from 'src/auth/guard/auth.guard';
+import { RolesGuard } from 'src/roleGuard/roles.guard';
+import { Roles } from 'src/roleGuard/roles.decorator';
+import { UserRole } from 'src/auth/schema/auth.schema';
 
 @ApiTags('Coupons')
+@ApiBearerAuth()
+	@UseGuards(AuthGuard, RolesGuard)												
+	@Roles(UserRole.ADMIN)
 @Controller('coupons')
 export class CouponController {
 	constructor(private readonly couponService: CouponService) { }

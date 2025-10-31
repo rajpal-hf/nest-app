@@ -1,1 +1,1 @@
-export * from './slot.dto';
+	export * from './slot.dto';

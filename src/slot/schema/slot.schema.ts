@@ -1,23 +1,23 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import {  HydratedDocument } from 'mongoose';
+import {  HydratedDocument, Types } from 'mongoose';
 
 
 @Schema({ timestamps: true })
 export class Slot {
 	@Prop({ required: true })
-	date: string; 
+	date: Date; 
 
 	@Prop({ required: true })
-	startTime: string;
+	startTime: Date;
 
 	@Prop({ required: true })
-	endTime: string; 
+	endTime: Date; 
 
 	@Prop({ default: 'available', enum: ['available', 'booked'] })
 	status: string;
 
-	@Prop({ type: String })
-	bookedBy?: string; 
+	@Prop({ type: Types.ObjectId, ref: 'User', default: null })
+	bookedBy: Types.ObjectId; 
 }
 
 export type SlotDocument = HydratedDocument<Slot>;

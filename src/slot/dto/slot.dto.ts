@@ -1,16 +1,59 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsDateString, IsString } from 'class-validator';
+import {
+	IsArray,
+	IsDateString,
+	IsOptional,
+	IsString,
+	ValidateNested,
+} from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class GenerateSlotsDto {
 	@ApiProperty({
-		description: 'Confirmation message indicating that slots were generated for the next 7 days.',
+		description:
+			'Confirmation message indicating that slots were generated for the next 7 days.',
 		example: 'Slots successfully generated for the next 7 days.',
 	})
 	message: string;
 }
+
+export class GenerateSlotsAdminDto {
+	@ApiProperty({
+		description: 'Start date from which to generate slots (inclusive)',
+		example: '2025-11-01T00:00:00.000Z',
+	})
+	@IsDateString()
+	startDate: string;
+
+	@ApiProperty({
+		description: 'End date until which to generate slots (inclusive)',
+		example: '2025-11-07T00:00:00.000Z',
+	})
+	@IsDateString()
+	endDate: string;
+
+	@ApiProperty({
+		description: 'Opening hour in 24-hour format (default: 10:00)',
+		example: '10:00',
+		required: false,
+	})
+	@IsOptional()
+	@IsString()
+	openingTime?: string;
+
+	@ApiProperty({
+		description: 'Closing hour in 24-hour format (default: 22:00)',
+		example: '22:00',
+		required: false,
+	})
+	@IsOptional()
+	@IsString()
+	closingTime?: string;
+}
 export class GetAvailableSlotsDto {
 	@ApiProperty({
-		description: 'Date for which available slots are requested in ISO format (YYYY-MM-DD)',
+		description:
+			'Date for which available slots are requested in ISO format (YYYY-MM-DD)',
 		example: '2025-10-30',
 	})
 	@IsDateString()
@@ -19,22 +62,35 @@ export class GetAvailableSlotsDto {
 
 export class AvailableSlotDto {
 	@ApiProperty({
-		description: 'Start time of the available slot.',
-		example: '09:00',
+		description: 'Start time of the available slot (ISO 8601 DateTime).',
+		example: '2025-10-30T09:00:00.000Z',
 	})
-	startTime: string;
+	@IsDateString()
+	startTime: Date;
 
 	@ApiProperty({
-		description: 'End time of the available slot.',
-		example: '10:00',
+		description: 'End time of the available slot (ISO 8601 DateTime).',
+		example: '2025-10-30T09:30:00.000Z',
 	})
-	endTime: string;
+	@IsDateString()
+	endTime: Date;
 
 	@ApiProperty({
 		description: 'The status of the slot (whether it is available or booked).',
 		example: 'available',
 	})
+	@IsString()
 	status: string;
+
+	@ApiProperty({
+		description: 'User ID who booked the slot (null if available).',
+		example: '64fa92b1e13d1b42a38ad234',
+		required: false,
+		nullable: true,
+	})
+	@IsOptional()
+	@IsString()
+	bookedBy?: string | null;
 }
 
 export class GetAvailableSlotsResponseDto {
@@ -42,9 +98,10 @@ export class GetAvailableSlotsResponseDto {
 		description: 'List of available slots for the requested date.',
 		type: [AvailableSlotDto],
 	})
+	@ValidateNested({ each: true })
+	@Type(() => AvailableSlotDto)
 	availableSlots: AvailableSlotDto[];
 }
-
 
 export class BookSlotsDto {
 	@ApiProperty({
@@ -55,8 +112,9 @@ export class BookSlotsDto {
 	date: string;
 
 	@ApiProperty({
-		description: 'List of slot times to be booked for the specified date',
-		example: ['09:00', '10:00'],
+		description:
+			'List of start times (in ISO 8601 format) of the slots to be booked.',
+		example: ['2025-10-30T09:00:00.000Z', '2025-10-30T09:30:00.000Z'],
 		type: [String],
 	})
 	@IsArray()
@@ -64,10 +122,10 @@ export class BookSlotsDto {
 	slotTimes: string[];
 }
 
-
 export class BookSlotsResponseDto {
 	@ApiProperty({
-		description: 'Confirmation message indicating successful booking of the slots.',
+		description:
+			'Confirmation message indicating successful booking of the slots.',
 		example: 'Slots booked successfully for the date: 2025-11-05.',
 	})
 	message: string;
@@ -76,16 +134,16 @@ export class BookSlotsResponseDto {
 		description: 'Details of the booked slots.',
 		example: [
 			{
-				startTime: '09:00',
-				endTime: '10:00',
+				startTime: '2025-10-30T09:00:00.000Z',
+				endTime: '2025-10-30T09:30:00.000Z',
 				status: 'booked',
-				bookedBy: 'user123',
+				bookedBy: '64fa92b1e13d1b42a38ad234',
 			},
 		],
 	})
 	bookedSlots: {
-		startTime: string;
-		endTime: string;
+		startTime: Date;
+		endTime: Date;
 		status: string;
 		bookedBy: string;
 	}[];

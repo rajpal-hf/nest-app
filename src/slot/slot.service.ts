@@ -1,8 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Slot, SlotDocument } from './schema/slot.schema';
 import dayjs from 'dayjs';
+import { GenerateSlotsAdminDto } from './dto';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()
 export class SlotService {
@@ -10,36 +12,61 @@ export class SlotService {
 
 	constructor(@InjectModel(Slot.name) private slotModel: Model<SlotDocument>) { }
 
-	async generateSlotsForNext7Days() {
-		const today = dayjs().startOf('day');
+	/**
+	 * Generate slots between a given start and end date.
+	 * Admin can choose custom opening/closing hours.
+	 */
+	async generateSlotsForDateRange(dto: GenerateSlotsAdminDto) {
+		const { startDate, endDate, openingTime = '10:00', closingTime = '22:00' } =
+			dto;
 
-	
-		await this.slotModel.deleteMany({ date: { $lt: today.format('YYYY-MM-DD') } });
+		const start = dayjs(startDate).startOf('day');
+		const end = dayjs(endDate).endOf('day');
 
-		for (let i = 0; i < 7; i++) {
-			const date = today.add(i, 'day').format('YYYY-MM-DD');
-			await this.generateSlotsForDate(date);
+		if (!start.isValid() || !end.isValid() || end.isBefore(start)) {
+			throw new Error('Invalid date range provided');
 		}
 
-		this.logger.log('✅ Slots updated for next 7 days');
+		// Delete past available slots before the start date
+		await this.slotModel.deleteMany({
+			status: 'available',
+			date: { $lt: start.toDate() },
+		});
+
+		const totalDays = end.diff(start, 'day') + 1;
+
+		for (let i = 0; i < totalDays; i++) {
+			const date = start.add(i, 'day');
+			await this.generateSlotsForDate(date.toDate(), openingTime, closingTime);
+			this.logger.log(`Generated slots for date: ${date.format('YYYY-MM-DD')}`);
+		}
+
+		return {
+			message: `Slots generated successfully from ${start.format(
+				'YYYY-MM-DD',
+			)} to ${end.format('YYYY-MM-DD')}`,
+		};
 	}
 
-
-
-	private async generateSlotsForDate(date: string) {
+	private async generateSlotsForDate(
+		date: Date,
+		openingTime: string,
+		closingTime: string,
+	) {
 		const existingSlots = await this.slotModel.find({ date });
 		if (existingSlots.length > 0) return;
 
-		const slots: Partial<Slot>[] = []; 	
-		let start = dayjs(`${date} 10:00`, 'YYYY-MM-DD HH:mm');
-		const close = dayjs(`${date} 22:00`, 'YYYY-MM-DD HH:mm');
+		const slots: Partial<Slot>[] = [];
+
+		let start = dayjs(`${dayjs(date).format('YYYY-MM-DD')} ${openingTime}`);
+		const close = dayjs(`${dayjs(date).format('YYYY-MM-DD')} ${closingTime}`);
 
 		while (start.isBefore(close)) {
 			const end = start.add(30, 'minute');
 			slots.push({
 				date,
-				startTime: start.format('HH:mm'),
-				endTime: end.format('HH:mm'),
+				startTime: start.toDate(),
+				endTime: end.toDate(),
 				status: 'available',
 			});
 			start = end;
@@ -48,18 +75,36 @@ export class SlotService {
 		await this.slotModel.insertMany(slots);
 	}
 
-
 	async getAvailableSlots(date: string) {
-		console.log('Fetching available slots for date:', date);
-		const res = await this.slotModel.find({ date, status: 'available' });
-		console.log('Available slots:', res);
-		return res
+		try {
+			const dayStart = dayjs(date).startOf('day').toDate();
+			const dayEnd = dayjs(date).endOf('day').toDate();
+
+			const res = await this.slotModel.find({
+				date: { $gte: dayStart, $lte: dayEnd },
+				status: 'available',
+			});
+
+			return res;
+		} catch (error) {
+			this.logger.error('Error fetching available slots:', error);
+			throw error;
+		}
 	}
 
 	async bookSlots(userId: string, date: string, slotTimes: string[]) {
+
+		try {
+			const dayStart = dayjs(date).startOf('day').toDate();
+		const dayEnd = dayjs(date).endOf('day').toDate();
+
+		const slotStartTimes = slotTimes.map((time) =>
+			dayjs(`${date} ${time}`, 'YYYY-MM-DD HH:mm').toDate(),
+		);
+
 		const slots = await this.slotModel.find({
-			date,
-			startTime: { $in: slotTimes },
+			date: { $gte: dayStart, $lte: dayEnd },
+			startTime: { $in: slotStartTimes },
 			status: 'available',
 		});
 
@@ -68,10 +113,45 @@ export class SlotService {
 		}
 
 		await this.slotModel.updateMany(
-			{ date, startTime: { $in: slotTimes } },
-			{ $set: { status: 'booked', bookedBy: userId } },
+			{
+				date: { $gte: dayStart, $lte: dayEnd },
+				startTime: { $in: slotStartTimes },
+			},
+			{ $set: { status: 'booked', bookedBy: new Types.ObjectId(userId) } },
 		);
 
 		return { message: 'Slots booked successfully', date, slots: slotTimes };
+
+		} catch (error) {
+			console.error('Error booking slots:', error);
+			throw error instanceof Error ? error : new Error('Internal Server Error');
+		}
+		
 	}
+
+
+	
+	// @Cron('*/5 * * * * *') 	
+	@Cron(CronExpression.EVERY_DAY_AT_2AM) 
+	async rollSlotsForNext7Days() {
+		try {
+			const today = dayjs().startOf('day');
+			const lastDay = today.add(6, 'day').endOf('day'); //add kro curr  date me 6 days
+			const nextDay = lastDay.add(1, 'day'); // or add kra 1 dya or bas ho gya
+
+
+			await this.slotModel.deleteMany({
+				date: { $lt: today.toDate() },
+			});
+
+
+			await this.generateSlotsForDate(nextDay.toDate(), '10:00', '22:00');
+
+			this.logger.log(`Rolled slots: kept 7 days from ${today.format('YYYY-MM-DD')} and generated 8th day ${nextDay.format('YYYY-MM-DD')}`);
+		} catch (err) {
+			this.logger.error('Error in rolling 7-day slots cron', err);
+		}
+	}
+
+	
 }

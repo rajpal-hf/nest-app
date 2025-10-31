@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Order, OrderDocument } from './schema/order.schema';
+import { Order, OrderDocument, PaymentStatus } from './schema/order.schema';
 
 @Injectable()
 export class OrderService {
@@ -34,7 +34,6 @@ export class OrderService {
 		return order;
 	}
 
-	/** Cancel order (user or admin) */
 	async cancelOrder(orderId: string, cancelledBy: 'user' | 'admin', reason?: string) {
 		const order = await this.orderModel.findById(orderId);
 		if (!order) throw new NotFoundException('Order not found');
@@ -62,7 +61,7 @@ export class OrderService {
 			throw new BadRequestException('Refund not initiated or already completed');
 
 		order.refundStatus = 'completed';
-		order.paymentStatus = 'refunded';
+		order.paymentStatus = PaymentStatus.REFUNDED;
 		await order.save();
 		return order;
 	}

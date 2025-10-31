@@ -4,12 +4,13 @@ import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody, ApiBearerAuth } 
 import { OrderDTO, UpdateStatusDTO, CancelOrderDTO, RefundStatusDTO } from './dto/order.dto';
 
 @ApiTags('Orders')
+@ApiBearerAuth()
 @Controller('orders')
 export class OrderController {
 	constructor(private readonly orderService: OrderService) { }
 
 	@Get()
-		@ApiBearerAuth()
+
 	@ApiOperation({ summary: 'Get all orders for a specific user' })
 	@ApiResponse({ status: 200, description: 'Orders retrieved successfully', type: [OrderDTO] })
 	getUserOrders(@Req() req: any) {

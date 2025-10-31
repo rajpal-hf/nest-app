@@ -1,10 +1,15 @@
-import { Controller, Post, Get, Body, Req } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
+import { Controller, Post, Get, Body, Req, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
 import { SlotService } from './slot.service';
-import { GenerateSlotsDto, GetAvailableSlotsDto, GetAvailableSlotsResponseDto, BookSlotsDto, BookSlotsResponseDto } from './dto';
+import { GenerateSlotsDto, GetAvailableSlotsDto, GetAvailableSlotsResponseDto, BookSlotsDto, BookSlotsResponseDto, GenerateSlotsAdminDto } from './dto';
+import { AuthGuard } from 'src/auth/guard/auth.guard';
+import { RolesGuard } from 'src/roleGuard/roles.guard';
+import { Roles } from 'src/roleGuard/roles.decorator';
+import { UserRole } from 'src/auth/schema/auth.schema';
 
 @ApiTags('Slots') 
-@Controller('slots')
+	@Controller('slots')
+	@ApiBearerAuth()
 export class SlotController {
 	constructor(private readonly slotService: SlotService) { }
 
@@ -18,11 +23,16 @@ export class SlotController {
 		description: 'Slots generated successfully.',
 		type: GenerateSlotsDto,
 	})
-	async generate() {
-		return this.slotService.generateSlotsForNext7Days();
+	@UseGuards(AuthGuard ,RolesGuard)
+	@Roles(UserRole.ADMIN)
+	@Post('generate-range')
+	async generateCustomSlots(@Body() dto: GenerateSlotsAdminDto) {
+		return this.slotService.generateSlotsForDateRange(dto);
 	}
 
-	@Get('available')
+	@UseGuards(AuthGuard)
+
+	@Post('available')
 	@ApiOperation({
 		summary: 'Get available slots for a specific date',
 		description: 'Retrieves available slots for the specified date.',
@@ -33,10 +43,12 @@ export class SlotController {
 		description: 'Available slots for the given date.',
 		type: GetAvailableSlotsResponseDto,
 	})
-	async getAvailable(@Body() date: GetAvailableSlotsDto) {
+	getAvailable(@Body() date: GetAvailableSlotsDto) {
 		return this.slotService.getAvailableSlots(date.date);
 	}
 
+	
+	@UseGuards(AuthGuard)
 	@Post('book')
 	@ApiOperation({
 		summary: 'Book available slots for a user',
@@ -48,7 +60,7 @@ export class SlotController {
 		description: 'Slots booked successfully.',
 		type: BookSlotsResponseDto,
 	})
-	async bookSlots(@Req() req, @Body() body: BookSlotsDto) {
+	async bookSlots(@Req() req:any, @Body() body: BookSlotsDto) {
 		const userId = req.user?._id || 'guest';
 		return this.slotService.bookSlots(userId, body.date, body.slotTimes);
 	}

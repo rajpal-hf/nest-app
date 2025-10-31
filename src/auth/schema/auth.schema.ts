@@ -4,6 +4,7 @@ import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 export enum UserRole {
 	ADMIN = 'admin',
 	CUSTOMER = 'customer',
+	VENDOR = "vendor"
 }
  export enum UserStatus { 
 	ACTIVE = 'active',

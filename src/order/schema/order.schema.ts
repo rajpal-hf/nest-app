@@ -3,6 +3,13 @@ import { HydratedDocument, Types } from 'mongoose';
 import { User } from 'src/auth/schema/auth.schema';
 import { Product } from 'src/product/schema/product.schema';
 
+export enum PaymentStatus {
+	PENDING = 'pending',
+	PAID = 'paid',
+	FAILED = 'failed',
+	REFUNDED = 'refunded',
+}
+
 
 @Schema({ timestamps: true })
 export class Order {
@@ -51,10 +58,10 @@ x
 
 	@Prop({
 		type: String,
-		enum: ['pending', 'paid', 'failed', 'refunded'],
-		default: 'pending',
+		emun: Object.values(PaymentStatus),
+		default: PaymentStatus.PENDING,
 	})
-	paymentStatus: string;
+	paymentStatus: PaymentStatus;
 
 	@Prop({
 		type: {
