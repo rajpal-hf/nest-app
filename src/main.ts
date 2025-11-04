@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { ApiBearerAuth, DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AllExceptionFilter } from './all-exception.filter';
+import { WsAdapter } from '@nestjs/platform-ws';
 
 async function bootstrap() {
 try {
@@ -44,9 +45,14 @@ try {
 		.addBearerAuth()
 		.build();
 	const documentFactory = () => SwaggerModule.createDocument(app, config);
-	SwaggerModule.setup('api', app, documentFactory);
+	SwaggerModule.setup('api', app, documentFactory, {
+		swaggerOptions: {
+			persistAuthorization : true
+		}
+	});
 
-	app.useGlobalFilters( new AllExceptionFilter())
+	app.useGlobalFilters(new AllExceptionFilter())
+	app.useWebSocketAdapter(new WsAdapter(app));
 
   await app.listen(PORT);
 } catch (error) {

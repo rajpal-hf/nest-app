@@ -11,9 +11,14 @@ import { BookingSlotModule } from './booking-slot/booking-slot.module';
 import { ScheduleModule } from "@nestjs/schedule";
 import { RestaurantModule } from './restaurant/restaurant.module';
 import { CategoryModule } from './category/category.module';
-import { FoodModule } from './food/food.module';
 import { CateringPlanModule } from './catering-plan/catering-plan.module';
 import { PaymentModule } from './payment/payment.module';
+import { ChatModule } from './chat/chat.module';
+import { MailController } from './mail/mail.controller';
+import { MailModule } from './mail/mail.module';
+import { SmsServiceModule } from './sms-service/sms-service.module';
+import { PushModule } from './push/push.module';
+
 
 
 @Module({
@@ -32,10 +37,13 @@ import { PaymentModule } from './payment/payment.module';
 		SlotModule,
 		BookingSlotModule,
 		RestaurantModule,
-		CategoryModule,
-		FoodModule,
+		CategoryModule,	
 		CateringPlanModule,
 		PaymentModule,
+		ChatModule,
+		MailModule,
+		SmsServiceModule,
+		PushModule,
 
 	],
 	

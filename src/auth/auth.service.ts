@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable, OnApplicationBootstrap } from '@nestjs/common';
 import { AuthDto, GetUserByIdDto, LoginDto, UserFilterDto } from './dto';
 import * as argon from 'argon2';
-import { User, UserDocument } from './schema/auth.schema';
+import { User, UserDocument, UserRole } from './schema/auth.schema';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { JwtService } from '@nestjs/jwt';
@@ -49,6 +49,7 @@ export class AuthService implements OnApplicationBootstrap {
 				name: dto.name,
 				password: hashPass,
 				phone: dto.phone,
+				role : dto.role ? dto.role : UserRole.CUSTOMER
 			});
 
 			await user.save();

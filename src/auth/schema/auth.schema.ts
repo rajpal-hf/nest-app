@@ -4,7 +4,7 @@ import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 export enum UserRole {
 	ADMIN = 'admin',
 	CUSTOMER = 'customer',
-	VENDOR = "vendor"
+	VENDOR = "vendor",
 }
  export enum UserStatus { 
 	ACTIVE = 'active',
@@ -38,7 +38,7 @@ export class User {
 	@Prop({
 		type: String,
 		enum: UserRole,
-		default: UserRole.CUSTOMER
+		default: UserRole.CUSTOMER	
 	})
 	role: UserRole;
 

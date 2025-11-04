@@ -25,7 +25,7 @@ export class PaymentService {
 				throw new HttpException('Order not found', 404);
 			}
 
-			if (amount !== order.totalAmount) {
+			if (amount !== order.totalAmount) {``
 				throw new HttpException('Invalid payment amount', 400);
 			}
 

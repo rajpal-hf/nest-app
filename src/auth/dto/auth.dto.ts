@@ -4,7 +4,7 @@
 // }
 
 import { IsEmail, IsNotEmpty, IsOptional, IsString, MinLength } from "class-validator";
-import { UserGender, UserStatus } from "../schema/auth.schema";
+import { UserGender, UserRole, UserStatus } from "../schema/auth.schema";
 import { ApiProperty, ApiSchema } from "@nestjs/swagger";
 
 @ApiSchema({name : "Auth Dto"})
@@ -32,7 +32,14 @@ export class AuthDto {
 	@ApiProperty({ description: 'The status of the user', example: 'active' })
 	@IsOptional()
 	status?: UserStatus;
-
+	
+	@ApiProperty({
+		description: 'The role of the user',
+		enum: UserRole,
+		example: UserRole.CUSTOMER,
+		required: false
+	})
+	role?: UserRole;
 
 	@ApiProperty({ description: 'The phone number of the user', example: '1234567890' })
 	@IsString()
