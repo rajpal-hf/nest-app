@@ -39,11 +39,11 @@ import { PushModule } from './push/push.module';
 		RestaurantModule,
 		CategoryModule,	
 		CateringPlanModule,
-		PaymentModule,
+		// PaymentModule,
 		ChatModule,
 		MailModule,
 		SmsServiceModule,
-		PushModule,
+		// PushModule,
 
 	],
 	

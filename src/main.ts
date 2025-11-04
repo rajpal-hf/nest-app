@@ -21,6 +21,7 @@ try {
 	app.enableCors({
 		origin: [
 			'http://localhost:3000',
+			'http://localhost:5173',
 			'https://eisegetical-brenda-buzzingly.ngrok-free.dev',
 		],
 		methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
