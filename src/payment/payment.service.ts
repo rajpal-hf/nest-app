@@ -15,7 +15,9 @@ export class PaymentService {
 		@InjectModel(Order.name) private orderModel: Model<OrderDocument>,
 		@InjectModel(Payment.name) private paymentModel: Model<PaymentDocument>,
 	) {
-		this.stripe = new Stripe(process.env.STRIPE_SECRET!);
+		this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+			apiVersion:"2025-10-29.clover"
+		});
 	}
 
 	/**
@@ -139,6 +141,65 @@ export class PaymentService {
 				: new HttpException('Internal server error', 500);
 		}
 	}
+
+
+	async createPaymentIntent(
+		userId: string,
+		orderId: string,
+		opts?: { currency?: string; receipt_email?: string }
+	) {
+		try {
+			console.log( "=> ", userId , " <=> ", orderId)
+			const currency = opts?.currency ?? 'usd';
+
+			// Fetch the order from DB
+			const order = await this.orderModel.findById(orderId);
+			if (!order) throw new HttpException('Order not found', 404);
+
+			// use the order's final amount
+			const amount = order.finalAmount;
+			if (!amount || amount <= 0)
+				throw new HttpException('Invalid order amount', 400);
+
+			const amountInCents = Math.round(amount * 100);
+
+			// Create a Stripe PaymentIntent
+			const paymentIntent = await this.stripe.paymentIntents.create({
+				amount: amountInCents,
+				currency,
+				payment_method_types: ['card'],
+				metadata: {
+					orderId,
+					userId,
+				},
+				receipt_email: opts?.receipt_email,
+				description: `Payment for Order #${orderId}`,
+			});
+
+			const payment = new this.paymentModel({
+				userId,
+				orderId,
+				amount,
+				paymentMethod: 'stripe',
+				paymentDate: new Date(),
+				status: PaymentStatus.PENDING,
+			});
+
+			await payment.save();
+
+			return {
+				clientSecret: paymentIntent.client_secret,
+				amount,
+				currency,
+				paymentIntentId: paymentIntent.id,
+				paymentId: payment._id,
+			};
+		} catch (error) {
+			console.error(' Stripe PaymentIntent creation failed:', error);
+			throw error instanceof HttpException ? error : new HttpException('Failed to create payment intent',500);
+		}
+	}
+
 }
 
 

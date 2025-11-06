@@ -18,16 +18,14 @@ import { MailController } from './mail/mail.controller';
 import { MailModule } from './mail/mail.module';
 import { SmsServiceModule } from './sms-service/sms-service.module';
 import { PushModule } from './push/push.module';
+import { RazorpayModule } from './razorpay/razorpay.module';
 
 
 
 @Module({
 	imports: [
-		ConfigModule.forRoot({
-			isGlobal: true,
-		}),
+		ConfigModule.forRoot({isGlobal: true,}),
 		ScheduleModule.forRoot(),
-		
 		MongooseModule.forRoot(process.env.DB_URI!),
 		AuthModule,
 		ProductModule,
@@ -39,10 +37,11 @@ import { PushModule } from './push/push.module';
 		RestaurantModule,
 		CategoryModule,	
 		CateringPlanModule,
-		// PaymentModule,
+		PaymentModule,
 		ChatModule,
 		MailModule,
 		SmsServiceModule,
+		RazorpayModule,
 		// PushModule,
 
 	],

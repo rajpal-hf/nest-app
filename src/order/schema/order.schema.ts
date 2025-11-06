@@ -15,7 +15,6 @@ export enum PaymentStatus {
 export class Order {
 	@Prop({ type: Types.ObjectId, ref: 'User', required: true })
 	user: Types.ObjectId;
-x	
 	@Prop([
 		{
 			product: { type: Types.ObjectId, ref: 'Product', required: true },

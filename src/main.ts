@@ -4,6 +4,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { ApiBearerAuth, DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AllExceptionFilter } from './all-exception.filter';
 import { WsAdapter } from '@nestjs/platform-ws';
+import bodyParser from 'body-parser'
 
 async function bootstrap() {
 try {
@@ -18,8 +19,14 @@ try {
 	// 	methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
 	// 	allowedHeaders: ['Content-Type', 'Authorization'],
 	// });
+
+	app.use('/stripe/webhook', bodyParser.raw({ type: 'application/json' }))
+	
+
 	app.enableCors({
 		origin: [
+			'*',
+			'https://w5k2xv.csb.app',
 			'http://localhost:3000',
 			'http://localhost:5173',
 			'https://eisegetical-brenda-buzzingly.ngrok-free.dev',
@@ -37,6 +44,7 @@ try {
 			whitelist : true
 		}
 	))
+	
 
 	const config = new DocumentBuilder()
 		.setTitle('nest auth example')
