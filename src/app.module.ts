@@ -14,11 +14,11 @@ import { CategoryModule } from './category/category.module';
 import { CateringPlanModule } from './catering-plan/catering-plan.module';
 import { PaymentModule } from './payment/payment.module';
 import { ChatModule } from './chat/chat.module';
-import { MailController } from './mail/mail.controller';
 import { MailModule } from './mail/mail.module';
 import { SmsServiceModule } from './sms-service/sms-service.module';
-import { PushModule } from './push/push.module';
 import { RazorpayModule } from './razorpay/razorpay.module';
+import { PushNotificationModule } from './push-notification/push-notification.module';
+import { OtpModule } from './otp/otp.module';
 
 
 
@@ -42,8 +42,8 @@ import { RazorpayModule } from './razorpay/razorpay.module';
 		MailModule,
 		SmsServiceModule,
 		RazorpayModule,
-		// PushModule,
-
+		PushNotificationModule,
+		OtpModule,
 	],
 	
 })

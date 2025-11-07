@@ -45,6 +45,13 @@ export class AuthDto {
 	@IsString()
 	@IsNotEmpty()
 	phone: string;
+
+	@ApiProperty({ description: 'OTP', example: '123490' })
+	@IsString()
+	@IsNotEmpty()
+	otp: string;
+
+
 }
 
 export class LoginDto {

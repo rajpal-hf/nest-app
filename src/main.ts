@@ -22,26 +22,33 @@ try {
 
 	app.use('/stripe/webhook', bodyParser.raw({ type: 'application/json' }))
 	
-
 	app.enableCors({
-		origin: [
-			'*',
-			'https://w5k2xv.csb.app',
-			'http://localhost:3000',
-			'http://localhost:5173',
-			'https://eisegetical-brenda-buzzingly.ngrok-free.dev',
-		],
-		methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-		allowedHeaders: [
-			'Content-Type',
-			'Authorization',
-			'ngrok-skip-browser-warning', 
-		],
-		credentials: true,
+		origin: 'http://localhost:3001',
+		methods: ['GET', 'POST'],
+		allowedHeaders: ['Content-Type'],
 	});
+
+	// app.enableCors({
+	// 	origin: [
+	// 		'*',
+	// 		'https://w5k2xv.csb.app',
+	// 		'http://localhost:3000',
+	// 		'http://localhost:5173',
+	// 		'https://eisegetical-brenda-buzzingly.ngrok-free.dev',
+	// 	],
+	// 	methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+	// 	allowedHeaders: [
+	// 		'Content-Type',
+	// 		'Authorization',
+	// 		'ngrok-skip-browser-warning', 
+	// 	],
+	// 	credentials: true,
+	// });
 	app.useGlobalPipes(new ValidationPipe(
 		{
-			whitelist : true
+			transform : true,
+			whitelist: true
+			
 		}
 	))
 	

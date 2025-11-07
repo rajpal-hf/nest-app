@@ -5,11 +5,13 @@ import { User, UserDocument, UserRole } from './schema/auth.schema';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { JwtService } from '@nestjs/jwt';
+import { Otp, OtpDocument } from 'src/otp/schema/otp.schema';
 
 @Injectable()
 export class AuthService implements OnApplicationBootstrap {
 	constructor(
 		@InjectModel(User.name) private userModel: Model<UserDocument>,
+		@InjectModel(Otp.name) private otpModel: Model<OtpDocument>,
 		private jwt: JwtService,
 	) {}
 
@@ -32,41 +34,94 @@ export class AuthService implements OnApplicationBootstrap {
 
 	// ``````````````````````````````````````````````````` Signup ```````````````````````````````````````````````````````
 	async signup(dto: AuthDto) {
-		console.log('🚀 Signup DTO:', dto);
 		try {
-			if (!dto.email || !dto.name || !dto.password || !dto.phone) {
+			const { name, email, password, phone, otp, role } = dto;
+
+			if (!email || !name || !password || !phone || !otp) {
 				throw new HttpException('All fields are required', HttpStatus.BAD_REQUEST);
 			}
 
-			const existingUser = await this.userModel.findOne({ email: dto.email });
+			const existingUser = await this.userModel.findOne({ email });
 			if (existingUser) {
-				throw new HttpException('User with this email already exists', HttpStatus.CONFLICT);
+				throw new HttpException('User already exists', HttpStatus.CONFLICT);
 			}
 
-			const hashPass = await argon.hash(dto.password);
+			// Get latest OTP
+			const recentOtp = await this.otpModel.find({ email }).sort({ createdAt: -1 }).limit(1);
+			if (recentOtp.length === 0) {
+				throw new HttpException('OTP not found', HttpStatus.BAD_REQUEST);
+			}
+
+			// Validate OTP
+			if (recentOtp[0].otp !== otp) {
+				throw new HttpException('Invalid or expired OTP', HttpStatus.BAD_REQUEST);
+			}
+
+			// Hash password
+			const hashedPassword = await argon.hash(password);
+
+			// Create user
 			const user = new this.userModel({
-				email: dto.email,
-				name: dto.name,
-				password: hashPass,
-				phone: dto.phone,
-				role : dto.role ? dto.role : UserRole.CUSTOMER
+				email,
+				name,
+				password: hashedPassword,
+				phone,
+				role: role || UserRole.CUSTOMER,
 			});
 
 			await user.save();
 
 			return {
 				status: HttpStatus.CREATED,
-				msg: 'User created successfully',
+				msg: 'User registered successfully',
 				user,
 			};
 		} catch (error) {
 			console.error('Error in signup service:', error);
-			// rethrow so it goes to the global filter
 			throw error instanceof HttpException
 				? error
 				: new HttpException(error.message || 'Internal server error', HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
+
+
+
+	// async signup(dto: AuthDto) {
+	// 	console.log('🚀 Signup DTO:', dto);
+	// 	try {
+	// 		if (!dto.email || !dto.name || !dto.password || !dto.phone) {
+	// 			throw new HttpException('All fields are required', HttpStatus.BAD_REQUEST);
+	// 		}
+
+	// 		const existingUser = await this.userModel.findOne({ email: dto.email });
+	// 		if (existingUser) {
+	// 			throw new HttpException('User with this email already exists', HttpStatus.CONFLICT);
+	// 		}
+
+	// 		const hashPass = await argon.hash(dto.password);
+	// 		const user = new this.userModel({
+	// 			email: dto.email,
+	// 			name: dto.name,
+	// 			password: hashPass,
+	// 			phone: dto.phone,
+	// 			role : dto.role ? dto.role : UserRole.CUSTOMER
+	// 		});
+
+	// 		await user.save();
+
+	// 		return {
+	// 			status: HttpStatus.CREATED,
+	// 			msg: 'User created successfully',
+	// 			user,
+	// 		};
+	// 	} catch (error) {
+	// 		console.error('Error in signup service:', error);
+	// 		// rethrow so it goes to the global filter
+	// 		throw error instanceof HttpException
+	// 			? error
+	// 			: new HttpException(error.message || 'Internal server error', HttpStatus.INTERNAL_SERVER_ERROR);
+	// 	}
+	// }
 	// ``````````````````````````````````````````````````` Login ```````````````````````````````````````````````````````
 	async login(dto: LoginDto) {
 		try {
